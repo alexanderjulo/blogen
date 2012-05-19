@@ -87,6 +87,14 @@ def post():
 
 # cli-interface
 @cli.command
+def setup():
+	print "Setting necessary folders up."
+	folders = ['pages', 'posts', 'static']
+	for folder in folders:
+		os.mkdir(folder)
+	print "Setup finished."
+
+@cli.command
 def build():
 	print "building static website.."
 	static.freeze()
