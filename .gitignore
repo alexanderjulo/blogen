@@ -1,4 +1,11 @@
+# Config file
 blogen.cfg
+
+# Folders with personal data
 pages/
 posts/
+static/
+
+# Default build folder
 build/
+
