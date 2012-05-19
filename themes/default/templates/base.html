@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    
+    <link href="{{ theme_static('bootstrap.css') }}" rel="stylesheet" type="text/css">
+    
+</head>
+<body>
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+			<div class="row">
+				<div class="span8 offset2">
+					<a href="#" class="brand">{{ title }}</a>
+					<ul class="nav">
+						<li></li>
+					</ul>
+				</div>
+			</div>
+			</div>			
+		</div>
+	</div>
+	
+	<div class="container">
+		<div class="row">
+			<div class="span8 offset2">
+				{% block content %}
+				{% endblock content %}
+			</div>
+		</div>
+	</div>
+</body>
+</html>
