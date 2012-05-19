@@ -79,6 +79,10 @@ def page():
 	for page in pages:
 		yield {'page': page.path}
 
+@static.register_generator
+def post():
+	for post in posts:
+		yield {'post': post.path}
 
 
 # cli-interface
