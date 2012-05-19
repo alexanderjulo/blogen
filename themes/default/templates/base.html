@@ -15,7 +15,9 @@
 				<div class="span8 offset2">
 					<a href="#" class="brand">{{ title }}</a>
 					<ul class="nav">
-						<li></li>
+						{% for (item, link) in menu %}
+						<li><a href="{{ link }}">{{ item }}</a></li>
+						{% endfor %}
 					</ul>
 				</div>
 			</div>

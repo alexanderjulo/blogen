@@ -1,5 +1,5 @@
 #!/usr/bin/python2.7 
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for
 from flaskext.themes import ThemeManager, setup_themes, render_theme_template
 from flaskext.flatpages import FlatPages
 from flaskext.script import Manager
@@ -37,6 +37,14 @@ def post(post):
 @gen.context_processor
 def inject_settings():
 	return dict(title=gen.config['TITLE'])
+	
+@gen.context_processor
+def inject_menu():
+	menu = list()
+	menu.append(('Blog', '/blog/'))
+	for page in pages:
+		menu.append((page.meta['title'], url_for("page", page=page.path)))
+	return dict(menu=menu)
 	
 # cli-interface
 @cli.command
