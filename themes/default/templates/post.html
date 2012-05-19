@@ -1,0 +1,6 @@
+{% extends theme('base.html', false) %}
+
+{% block content %}
+	<h1>{{ post.meta['title'] }}</h1>
+	{{ post.html|safe }}
+{% endblock content %}
