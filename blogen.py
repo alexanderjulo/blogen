@@ -4,6 +4,7 @@ from flaskext.themes import ThemeManager, setup_themes, render_theme_template
 from flaskext.flatpages import FlatPages, pygmented_markdown
 from flaskext.script import Manager
 from flask_frozen import Freezer
+import os
 
 # some default settings, that can be overwritten
 THEME='default'
@@ -13,6 +14,8 @@ gen = Flask(__name__)
 gen.config.from_object(__name__)
 gen.config.from_pyfile('blogen.cfg')
 setup_themes(gen, app_identifier='blogen', theme_url_prefix='/theme')
+
+# subclassing flatpages, to enable multiple page roots
 class FlexFlatPages(FlatPages):
 	def __init__(self, app, root):
 		app.config.setdefault('FLATPAGES_ROOT', 'pages')
@@ -30,12 +33,13 @@ class FlexFlatPages(FlatPages):
 		
 	def root(self):
 		return os.path.join(self.app.root_path, self.root)
-		
-FLATPAGES_ROOT='pages'
+
+# create two instances of flatpages, one for the pages and one for the posts.	
 pages = FlexFlatPages(gen, 'pages')
-FLATPAGES_ROOT='posts'
 posts = FlexFlatPages(gen, 'posts')
+
 cli = Manager(gen)
+
 static = Freezer(gen)
 
 @gen.route('/')
@@ -54,6 +58,7 @@ def postindex():
 def post(post):
 	return render_theme_template(gen.config['THEME'], 'post.html', post=posts.get_or_404(post))
 	
+	
 # inject some standard vars into templates
 @gen.context_processor
 def inject_settings():
@@ -66,18 +71,22 @@ def inject_menu():
 	for page in pages:
 		menu.append((page.meta['title'], url_for("page", page=page.path)))
 	return dict(menu=menu)
-	
+
+
 # make sure all urls are found
 @static.register_generator
 def page():
 	for page in pages:
 		yield {'page': page.path}
 
-	
+
+
 # cli-interface
 @cli.command
 def build():
+	print "building static website.."
 	static.freeze()
+	print "finished!"
 
 if __name__ == '__main__':
 	cli.run()
