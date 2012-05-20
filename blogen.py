@@ -62,7 +62,7 @@ def post(post):
 # inject some standard vars into templates
 @gen.context_processor
 def inject_settings():
-	return dict(title=gen.config['TITLE'])
+	return gen.config
 	
 @gen.context_processor
 def inject_menu():
