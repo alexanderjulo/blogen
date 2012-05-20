@@ -6,6 +6,6 @@
 	
 	{% if DISQUS %}
 		{% import theme('disqus.html', false) as disqus %}
-		{{ disqus.post() }}
+		{{ disqus.post(DISQUS) }}
 	{% endif %}
 {% endblock content %}

@@ -1,6 +1,6 @@
-{% macro basic() -%}
+{% macro basic(shortname) -%}
 <script type="text/javascript">
-		var disqus_shortname = '{{ DISQUS }}';
+		var disqus_shortname = '{{ shortname }}';
 		(function () {
 				var s = document.createElement('script'); s.async = true;
 				s.type = 'text/javascript';
@@ -10,10 +10,10 @@
 </script>
 {%- endmacro %}
 
-{% macro post() -%}
+{% macro post(shortname) -%}
 <div id="disqus_thread"></div>
 <script type="text/javascript">
-		var disqus_shortname = '{{ DISQUS }}';
+		var disqus_shortname = '{{ shortname }}';
 		(function() {
 				var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
 				dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';

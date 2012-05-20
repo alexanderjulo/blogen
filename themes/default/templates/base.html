@@ -13,6 +13,9 @@
     
     <script src="{{ theme_static('jquery.js') }}" type="text/javascript"></script>
     <script src="{{ theme_static('bootstrap.js') }}" type="text/javascript"></script>
+    {% if ANALYTICS %}
+    	{% include theme('analytics.html', false) %}
+    {% endif %}
     
 </head>
 <body>
@@ -44,7 +47,7 @@
 	
 	{% if DISQUS %}
 		{% import theme('disqus.html', false) as disqus %}
-		{{ disqus.basic() }}
+		{{ disqus.basic(DISQUS) }}
 	{% endif %}
 </body>
 </html>
