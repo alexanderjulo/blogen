@@ -26,10 +26,23 @@
 				<div class="span8 offset2">
 					<a href="#" class="brand">{{ TITLE }}</a>
 					<ul class="nav">
-						{% for (item, link) in menu %}
-						<li><a href="{{ link }}">{{ item }}</a></li>
+						{% for (title, link) in menu %}
+						<li><a href="{{ link }}">{{ title }}</a></li>
 						{% endfor %}
 					</ul>
+					
+					{% if SOCIAL %}
+					<ul class="nav pull-right">
+						<li>
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">Social</a>
+							<ul class="dropdown-menu">
+								{% for (title, link) in SOCIAL %}
+									<li><a href="{{ link }}">{{ title }}</a></li>
+								{% endfor %}
+							</ul>
+						</li>
+					</ul>
+					{% endif %}
 				</div>
 			</div>
 			</div>			
