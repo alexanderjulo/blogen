@@ -1,0 +1,3 @@
+<h1><a href="{{ element.link }}">{{ element.title }}&rarr;</a></h1>
+<p class="meta"><small><span>{% if element.meta['author'] %}{{ element.meta['author'] }}</a> - {% endif %}</span><span>{{ element.meta['date'] }}</span> - <span class="tags">{% if element.meta['tags'] %}{% for tag in element.meta['tags'] %}<a href="{{ url_for('tag', tag=tag) }}">{{ tag }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</span></small></p>
+{{ element.html|safe }}

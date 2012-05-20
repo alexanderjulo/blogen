@@ -3,7 +3,7 @@ blogen.cfg
 
 # Folders with personal data
 pages/
-posts/
+/posts/
 static/
 
 # Default build folder

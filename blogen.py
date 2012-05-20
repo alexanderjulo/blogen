@@ -1,6 +1,6 @@
 #!/usr/bin/python2.7
 # ALL the imports!!1 
-from flask import Flask, render_template, url_for, redirect
+from flask import Flask, render_template, url_for, redirect, abort
 from flaskext.themes import ThemeManager, setup_themes, render_theme_template
 from flaskext.flatpages import FlatPages, pygmented_markdown, Page
 from flaskext.script import Manager
@@ -59,6 +59,7 @@ class Pagination(object):
 				# sort posts by date
 				def getpagedate(page):
 					if isinstance(page, str):
+						print source.get(page).meta['date']
 						return source.get(page).meta['date']
 					if isinstance(page, Page):
 						return page.meta['date']
@@ -139,7 +140,7 @@ def postindex(page):
 	
 @gen.route('/blog/<post>/')
 def post(post):
-	return render_theme_template(gen.config['THEME'], 'post.html', post=posts.get_or_404(post))
+	return render_theme_template(gen.config['THEME'], 'post.html', element=posts.get_or_404(post))
 
 @gen.route('/blog/tags/')
 def tagindex():
