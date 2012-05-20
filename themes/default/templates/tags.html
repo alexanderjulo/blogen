@@ -1,0 +1,9 @@
+{% extends theme('base.html', false) %}
+
+{% block content %}
+	<ul>
+	{% for tag in tags %}
+		<li><a href="{{ url_for('tag', tag=tag) }}">{{ tag }}</a></li>
+	{%  endfor %}
+	</ul>
+{% endblock content %}

@@ -2,7 +2,7 @@
 # ALL the imports!!1 
 from flask import Flask, render_template, url_for, redirect
 from flaskext.themes import ThemeManager, setup_themes, render_theme_template
-from flaskext.flatpages import FlatPages, pygmented_markdown
+from flaskext.flatpages import FlatPages, pygmented_markdown, Page
 from flaskext.script import Manager
 from flask_frozen import Freezer
 import os
@@ -51,24 +51,38 @@ class FlexFlatPages(FlatPages):
 # I stole this from http://flask.pocoo.org/snippets/44/
 # well you can not really say stolen, as I adapted a lot of things
 class Pagination(object):
-		def __init__(self, object, page, per_page):
-				self.object = object
+		def __init__(self, source, page, per_page, objects):
+				self.source = source
 				self.page = page
 				self.per_page = per_page
 				
 				# sort posts by date
 				def getpagedate(page):
-					return object.get(page).meta['date']
+					if isinstance(page, str):
+						return source.get(page).meta['date']
+					if isinstance(page, Page):
+						return page.meta['date']
 				
-				self.objects = sorted(object._pages, key=getpagedate, reverse=True)
+				# if there is a list of posts given, sort the list
+				# otherwise get all posts from the source and sort them
+				if not objects:
+					elements = source._pages
+				else:
+					elements = objects
+				self.objects = sorted(elements, key=getpagedate, reverse=True)
+				print self.objects
 				self.total_count = len(self.objects)
 				
 				# build content of current page
 				current_strings = self.objects[(page - 1)*per_page:(page)*per_page]
 				current_objects = list()
 				for element in current_strings:
-					current_objects.append(object.get(element))
+					if isinstance(element, Page):
+						current_objects.append(element)
+					else:
+						current_objects.append(source.get(element))
 				self.current = current_objects
+				print self.current
 					
 
 		@property
@@ -94,8 +108,8 @@ class Pagination(object):
 								last = num
 
 # a helper function to get the wanted page
-def paginate(objects, page):
-	return Pagination(objects, page, gen.config['PER_PAGE'])
+def paginate(source, page, objects=None):
+	return Pagination(source, page, gen.config['PER_PAGE'], objects)
 		
 
 						
@@ -126,7 +140,25 @@ def postindex(page):
 @gen.route('/blog/<post>/')
 def post(post):
 	return render_theme_template(gen.config['THEME'], 'post.html', post=posts.get_or_404(post))
-	
+
+@gen.route('/blog/tags/')
+def tagindex():
+	tags = []
+	for post in posts:
+		for tag in post.meta['tags']:
+			if tag not in tags:
+				tags.append(tag)
+	return render_theme_template(gen.config['THEME'], 'tags.html', tags=sorted(tags))
+
+@gen.route('/blog/tag/<tag>/', defaults={'page': 1})
+@gen.route('/blog/tag/<tag>/page/<page>/')
+def tag(tag, page):
+	tagged = list()
+	for post in posts:
+		if tag in post.meta['tags']:
+			print str(post) + "has the tag" + tag
+			tagged.append(post)
+	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page, objects=tagged))
 	
 # inject some standard vars into templates
 @gen.context_processor
