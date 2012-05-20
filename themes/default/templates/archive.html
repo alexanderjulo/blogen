@@ -1,0 +1,18 @@
+{% extends theme('base.html', false) %}
+
+{% block content %}
+	<table class="table table-condensed">
+	<thead>
+		<tr>
+			<th>Date</th>
+			<th>Title</th>
+		</tr>
+	</thead>
+	{% for element in pagination.current %}
+	<tr>
+		<td>{{ element.date }}</td>
+		<td><a href="{{ url_for('post', post=element.slug) }}">{{ element.title }}</a></td>
+	</tr>
+	{%  endfor %}
+	</table>
+{% endblock content %}

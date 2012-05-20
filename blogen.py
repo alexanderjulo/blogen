@@ -179,7 +179,10 @@ class Pagination(object):
 				self.total_count = len(self.objects)
 				
 				# build content of current page
-				current_strings = self.objects[(page - 1)*per_page:(page)*per_page]
+				if per_page == 0:
+					current_strings = self.objects
+				else:
+					current_strings = self.objects[(page - 1)*per_page:(page)*per_page]
 				current_objects = list()
 				for element in current_strings:
 					if isinstance(element, Page):
@@ -191,7 +194,10 @@ class Pagination(object):
 
 		@property
 		def pages(self):
-				return int(ceil(self.total_count / float(self.per_page)))
+				if self.per_pages == 0:
+						return 1
+				else:
+					return int(ceil(self.total_count / float(self.per_page)))
 
 		@property
 		def has_prev(self):
@@ -212,8 +218,8 @@ class Pagination(object):
 								last = num
 
 # a helper function to get the wanted page
-def paginate(source, page, objects=None):
-	return Pagination(source, page, gen.config['PER_PAGE'], objects)
+def paginate(source, page, per_page=gen.config['PER_PAGE'], objects=None):
+	return Pagination(source, page, per_page, objects)
 		
 		
 						
@@ -263,6 +269,10 @@ def tag(tag, page):
 		if tag in post.meta['tags']:
 			tagged.append(post)
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page, objects=tagged))
+
+@gen.route('/blog/archive/')
+def archive():
+	return render_theme_template(gen.config['THEME'], 'archive.html', pagination=paginate(posts, page=1, per_page=0))
 	
 # inject some standard vars into templates
 @gen.context_processor
@@ -282,12 +292,12 @@ def inject_menu():
 @static.register_generator
 def page():
 	for page in pages:
-		yield {'page': page.slug}
+		yield {'page': page.meta['slug']}
 
 @static.register_generator
 def post():
 	for post in posts:
-		yield {'post': post.slug}
+		yield {'post': post.meta['slug']}
 
 
 # cli-interface
