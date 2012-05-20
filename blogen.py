@@ -1,6 +1,6 @@
 #!/usr/bin/python2.7
 # ALL the imports!!1 
-from flask import Flask, Blueprint, render_template, url_for, redirect
+from flask import Flask, render_template, url_for, redirect
 from flaskext.themes import ThemeManager, setup_themes, render_theme_template
 from flaskext.flatpages import FlatPages, pygmented_markdown
 from flaskext.script import Manager
@@ -58,7 +58,6 @@ class Pagination(object):
 				
 				# sort posts by date
 				def getpagedate(page):
-					print(object.get(page).meta['date'])
 					return object.get(page).meta['date']
 				
 				self.objects = sorted(object._pages, key=getpagedate, reverse=True)
