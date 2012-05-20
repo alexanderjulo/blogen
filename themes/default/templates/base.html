@@ -5,7 +5,7 @@
     <title>{% block title %}{% endblock title %} - {{ TITLE }}</title>
     
 		<link href='http://fonts.googleapis.com/css?family=Arimo:400,700,400italic' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Inika' rel='stylesheet' type='text/css'>
 
     <link href="{{ theme_static('bootstrap.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ theme_static('adjust.css') }}" rel="stylesheet" type="text/css">
@@ -21,7 +21,7 @@
 			<div class="container">
 			<div class="row">
 				<div class="span8 offset2">
-					<a href="#" class="brand">{{ title }}</a>
+					<a href="#" class="brand">{{ TITLE }}</a>
 					<ul class="nav">
 						{% for (item, link) in menu %}
 						<li><a href="{{ link }}">{{ item }}</a></li>
@@ -41,5 +41,10 @@
 			</div>
 		</div>
 	</div>
+	
+	{% if DISQUS %}
+		{% import theme('disqus.html', false) as disqus %}
+		{{ disqus.basic() }}
+	{% endif %}
 </body>
 </html>

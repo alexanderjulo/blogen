@@ -14,12 +14,12 @@
 			</div>
 			<div class="row">
 				{% if DISQUS %}
-					<div class="span3">
+					<div class="span4">
 							<a class="btn btn-small disabled" href="{{ url_for('post', post=element.path) }}#disqus_thread"></a>
 					</div>
 					<div class="span1 offset3">
 				{% else %}
-					<div class="span1 offset6">
+					<div class="span1 offset7">
 				{% endif %}
 							<a class="btn btn-small" href="{{ url_for('post', post=element.path) }}" rel="bookmark" title="Permalink to {{ element.meta['title'] }}">Mehr</a>
 					</div>

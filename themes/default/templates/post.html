@@ -3,4 +3,9 @@
 {% block content %}
 	<h1>{{ post.meta['title'] }}</h1>
 	{{ post.html|safe }}
+	
+	{% if DISQUS %}
+		{% import theme('disqus.html', false) as disqus %}
+		{{ disqus.post() }}
+	{% endif %}
 {% endblock content %}
