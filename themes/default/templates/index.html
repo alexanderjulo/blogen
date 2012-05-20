@@ -2,7 +2,7 @@
 
 {% block content %}
 	<ul class="unstyled">
-	{% for element in list %}
+	{% for element in pagination.current %}
 	<li>
 	<div>    
 			<div class="header">
@@ -30,5 +30,14 @@
 	<li><hr></li>
 	{% endif %}
 	{%  endfor %}
+	</ul>
+	<ul class="pager" id="pagination">
+		{% if pagination.has_prev %}
+			<li class="previous"><a href="{{ url_for('postindex', page=pagination.page-1) }}">&larr; Newer</a></li>
+		{% endif %}
+		<li class="disabled"><a href="#pagination">{{ pagination.page }}/{{ pagination.pages }}</a></li>
+		{% if pagination.has_next %}
+			<li class="next"><a href="{{ url_for('postindex', page=pagination.page+1) }}">Older &rarr;</a></li>
+		{% endif %}
 	</ul>
 {% endblock content %}

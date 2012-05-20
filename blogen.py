@@ -1,20 +1,33 @@
-#!/usr/bin/python2.7 
-from flask import Flask, Blueprint, render_template, url_for
+#!/usr/bin/python2.7
+# ALL the imports!!1 
+from flask import Flask, Blueprint, render_template, url_for, redirect
 from flaskext.themes import ThemeManager, setup_themes, render_theme_template
 from flaskext.flatpages import FlatPages, pygmented_markdown
 from flaskext.script import Manager
 from flask_frozen import Freezer
 import os
+from math import ceil	
+
+
 
 # some default settings, that can be overwritten
 THEME='default'
 FLATPAGES_EXTENSION='.md'
+PER_PAGE=5
 
+
+
+# setup all the modules we need
 gen = Flask(__name__)
 gen.config.from_object(__name__)
 gen.config.from_pyfile('blogen.cfg')
 setup_themes(gen, app_identifier='blogen', theme_url_prefix='/theme')
+cli = Manager(gen)
+static = Freezer(gen)
 
+
+
+# Here is some code I hat to include to make things work
 # subclassing flatpages, to enable multiple page roots
 class FlexFlatPages(FlatPages):
 	def __init__(self, app, root):
@@ -24,35 +37,92 @@ class FlexFlatPages(FlatPages):
 		app.config.setdefault('FLATPAGES_HTML_RENDERER', pygmented_markdown)
 		app.config.setdefault('FLATPAGES_AUTO_RELOAD', 'if debug')
 		self.app = app
-		self.root = root
-		
+		self.root = unicode(root)
+
 		#: dict of filename: (page object, mtime when loaded) 
 		self._file_cache = {}
-		
+
 		app.before_request(self._conditional_auto_reset)
-		
+
 	def root(self):
 		return os.path.join(self.app.root_path, self.root)
 
+
+# I stole this from http://flask.pocoo.org/snippets/44/
+# well you can not really say stolen, as I adapted a lot of things
+class Pagination(object):
+		def __init__(self, object, page, per_page):
+				self.object = object
+				self.page = page
+				self.per_page = per_page
+				
+				# sort posts by date
+				def getpagedate(page):
+					print(object.get(page).meta['date'])
+					return object.get(page).meta['date']
+				
+				self.objects = sorted(object._pages, key=getpagedate, reverse=True)
+				self.total_count = len(self.objects)
+				
+				# build content of current page
+				current_strings = self.objects[(page - 1)*per_page:(page)*per_page]
+				current_objects = list()
+				for element in current_strings:
+					current_objects.append(object.get(element))
+				self.current = current_objects
+					
+
+		@property
+		def pages(self):
+				return int(ceil(self.total_count / float(self.per_page)))
+
+		@property
+		def has_prev(self):
+				return self.page > 1
+
+		@property
+		def has_next(self):
+				return self.page < self.pages
+
+		def iter_pages(self, left_edge=2, left_current=2,
+									 right_current=5, right_edge=2):
+				last = 0
+				for num in xrange(1, self.pages + 1):
+						if num <= left_edge or (num > self.page - left_current - 1 and num < self.page + right_current) or num > self.pages - right_edge:
+								if last + 1 != num:
+										yield None
+								yield num
+								last = num
+
+# a helper function to get the wanted page
+def paginate(objects, page):
+	return Pagination(objects, page, gen.config['PER_PAGE'])
+		
+
+						
 # create two instances of flatpages, one for the pages and one for the posts.	
 pages = FlexFlatPages(gen, 'pages')
 posts = FlexFlatPages(gen, 'posts')
 
-cli = Manager(gen)
 
-static = Freezer(gen)
 
+# This is what will be frozen later on
 @gen.route('/')
 def index():
-	return "Bla"
+	homepage = pages.get('index')
+	if homepage:
+		return render_theme_template(gen.config['THEME'], 'page.html', homepage)
+	else:
+		return redirect(url_for('postindex'))
 	
 @gen.route('/<page>/')
 def page(page):
 	return render_theme_template(gen.config['THEME'], 'page.html', page=pages.get_or_404(page))
-		
-@gen.route('/blog/')
-def postindex():
-	return render_theme_template(gen.config['THEME'], 'index.html', list=posts)
+
+@gen.route('/blog/', defaults={'page': 1})
+@gen.route('/blog/page/<int:page>/')
+def postindex(page):
+	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page))
 	
 @gen.route('/blog/<post>/')
 def post(post):
