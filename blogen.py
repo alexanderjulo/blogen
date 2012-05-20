@@ -82,7 +82,7 @@ class Page(object):
 		try:
 			meta['slug']
 		except KeyError:
-			rules = [('%T', meta['title']), ("%P", self.path) (" ", "-")]
+			rules = [('%T', meta['title']), ("%P", self.path), (" ", "-")]
 			slug = SLUG
 			for (expression, replacement) in rules:
 				slug = replace(slug, expression, replacement)
