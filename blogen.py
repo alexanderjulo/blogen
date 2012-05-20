@@ -199,7 +199,7 @@ class Pagination(object):
 
 		@property
 		def pages(self):
-				if self.per_pages == 0:
+				if self.per_page == 0:
 						return 1
 				else:
 					return int(ceil(self.total_count / float(self.per_page)))
@@ -303,6 +303,14 @@ def page():
 def post():
 	for post in posts:
 		yield {'post': post.meta['slug']}
+
+@static.register_generator
+def postindex():
+	pagination=paginate(posts, page=1)
+	i = 1
+	while i <= pagination.pages:
+		yield {'page': i}
+		i = i+1
 
 
 # cli-interface
