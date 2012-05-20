@@ -2,8 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>{{ title }}</title>
+    <title>{% block title %}{% endblock title %} - {{ TITLE }}</title>
     
+		<link href='http://fonts.googleapis.com/css?family=Arimo:400,700,400italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:700' rel='stylesheet' type='text/css'>
+
     <link href="{{ theme_static('bootstrap.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ theme_static('adjust.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ theme_static('pygments.css') }}" rel="stylesheet" type="text/css">

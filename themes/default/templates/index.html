@@ -1,8 +1,34 @@
 {% extends theme('base.html', false) %}
 
 {% block content %}
+	<ul class="unstyled">
 	{% for element in list %}
-	<h1><a href="{{ url_for('post', post=element.path) }}">{{ element.meta['title']}}</a></h1>
-	{{ element.html|safe }}
+	<li>
+	<div>    
+			<div class="header">
+					<h1>{{ element.meta['title'] }}</h1>
+			</div>
+			<p class="meta"><small><span>{% if element.meta['author'] %}{{ element.meta['author'] }}</a> - {% endif %}</span><span>{{ element.meta['date'] }}</span> - <span class="tags">{% if element.meta['tags'] %}{% for tag in element.meta['tags'] %}{{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</span></small></p>
+			<div class="entry-content">
+					{{ element.html|safe }}
+			</div>
+			<div class="row">
+				{% if DISQUS %}
+					<div class="span3">
+							<a class="btn btn-small disabled" href="{{ url_for('post', post=element.path) }}#disqus_thread"></a>
+					</div>
+					<div class="span1 offset3">
+				{% else %}
+					<div class="span1 offset6">
+				{% endif %}
+							<a class="btn btn-small" href="{{ url_for('post', post=element.path) }}" rel="bookmark" title="Permalink to {{ element.meta['title'] }}">Mehr</a>
+					</div>
+			</div>
+	</div>
+	</li>
+	{% if not loop.last %}
+	<li><hr></li>
+	{% endif %}
 	{%  endfor %}
+	</ul>
 {% endblock content %}
