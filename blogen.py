@@ -20,6 +20,7 @@ from flask_frozen import Freezer
 
 
 # some default settings, that can be overwritten
+AUTHOR='anonymous'
 THEME='default'
 PER_PAGE=5
 SLUG='%T'
@@ -86,6 +87,10 @@ class Page(object):
 			for (expression, replacement) in rules:
 				slug = replace(slug, expression, replacement)
 			meta['slug'] = lower(slug)
+		try:
+			meta['author']
+		except KeyError:
+			meta['author'] = gen.config['AUTHOR']
 			
 		return meta
 		
