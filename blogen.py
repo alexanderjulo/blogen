@@ -1,19 +1,26 @@
 #!/usr/bin/python2.7
 # ALL the imports!!1 
-from flask import Flask, render_template, url_for, redirect, abort
-from flaskext.themes import ThemeManager, setup_themes, render_theme_template
-from flaskext.flatpages import FlatPages, pygmented_markdown, Page
-from flaskext.script import Manager
-from flask_frozen import Freezer
+from __future__ import with_statement
+
 import os
+import itertools
+
+import yaml
+import markdown
+import werkzeug
+
 from math import ceil
 from string import replace, lower
+
+from flask import Flask, render_template, url_for, redirect, abort
+from flaskext.themes import ThemeManager, setup_themes, render_theme_template
+from flaskext.script import Manager
+from flask_frozen import Freezer
 
 
 
 # some default settings, that can be overwritten
 THEME='default'
-FLATPAGES_EXTENSION='.md'
 PER_PAGE=5
 SLUG='%T'
 
@@ -29,25 +36,120 @@ static = Freezer(gen)
 
 
 
-# Here is some code I hat to include to make things work
-# subclassing flatpages, to enable multiple page roots
-class FlexFlatPages(FlatPages):
+# Here is some code I had to include to make things work
+# unfortunately subclassing flask-flatpages was not enough,
+# so I copied and adjusted it. the original source is:
+# https://github.com/SimonSapin/Flask-FlatPages
+def pygmented_markdown(text):
+		try:
+				import pygments
+		except ImportError:
+				extensions = []
+		else:
+				extensions = ['codehilite']
+		return markdown.markdown(text, extensions)
+
+
+def pygments_style_defs(style='default'):
+		import pygments.formatters
+		formater = pygments.formatters.HtmlFormatter(style=style)
+		return formater.get_style_defs('.codehilite')
+		
+class Page(object):
+	def __init__(self, path, meta_yaml, body):
+		self.path = path
+		self.body = body
+		self._meta_yaml = meta_yaml
+		self.html_renderer = pygmented_markdown
+		
+	def __repr__(self):
+		return '<Page %r>' % self.path
+	
+	@werkzeug.cached_property
+	def html(self):
+		return self.html_renderer(self.body)
+	
+	def __html__(self):
+		return self.html
+	
+	@werkzeug.cached_property
+	def meta(self):
+		meta = yaml.safe_load(self._meta_yaml)
+		if not meta:
+			return {}
+		assert isinstance(meta, dict)
+		try:
+			meta['slug']
+		except KeyError:
+			rules = [('%T', meta['title']), (" ", "-")]
+			slug = SLUG
+			for (expression, replacement) in rules:
+				slug = replace(slug, expression, replacement)
+			meta['slug'] = lower(slug)
+			
+		return meta
+		
+	def __getitem__(self, name):
+		return self.meta[name]
+		
+
+class FlatPages(object):
 	def __init__(self, app, root):
-		app.config.setdefault('FLATPAGES_ROOT', 'pages')
-		app.config.setdefault('FLATPAGES_EXTENSION', '.html')
-		app.config.setdefault('FLATPAGES_ENCODING', 'utf8')
-		app.config.setdefault('FLATPAGES_HTML_RENDERER', pygmented_markdown)
-		app.config.setdefault('FLATPAGES_AUTO_RELOAD', 'if debug')
 		self.app = app
 		self.root = unicode(root)
 
 		#: dict of filename: (page object, mtime when loaded) 
 		self._file_cache = {}
 
-		app.before_request(self._conditional_auto_reset)
-
 	def root(self):
 		return os.path.join(self.app.root_path, self.root)
+		
+	def __iter__(self):
+		"""Iterate on all :class:`Page` objects."""
+		return self._pages.itervalues()
+		
+	def get(self, slug):
+		pages = self._pages
+		try:
+			return pages[slug]
+		except KeyError:
+			return None
+			
+	def get_or_404(self, slug):
+		page = self.get(slug)
+		if not page:
+			abort(404)
+		return page
+	
+	@werkzeug.cached_property	
+	def _pages(self):
+		def _walk(directory, path_prefix=()):
+			for name in os.listdir(directory):
+				full_name = os.path.join(directory, name)
+				if os.path.isdir(full_name):
+					_walk(full_name, path_prefix + (name,))
+				elif name.endswith('.md'):
+					name_without_extension = name[:-len('.md')]
+					path = u'/'.join(path_prefix + (name_without_extension,))
+					page = self._load_file(path, full_name)
+					pages[page.meta['slug']] = page
+		
+		pages = {}
+		_walk(self.root)
+		return pages
+	
+	def _load_file(self, path, filename):
+		with open(filename) as fd:
+			content = fd.read().decode('utf8')
+		page = self._parse(content, path)
+		return page
+		
+	def _parse(self, string, path):
+		lines = iter(string.split(u'\n'))
+		meta = u'\n'.join(itertools.takewhile(unicode.strip, lines))
+		content = u'\n'.join(lines)
+		return Page(path, meta, content)
+
 
 
 # I stole this from http://flask.pocoo.org/snippets/44/
@@ -112,31 +214,12 @@ class Pagination(object):
 # a helper function to get the wanted page
 def paginate(source, page, objects=None):
 	return Pagination(source, page, gen.config['PER_PAGE'], objects)
-
-# generate dynamic and nice looking slugs for everything!
-def getslug(element):
-	try:
-		slug = element.meta['slug']
-	except KeyError:
-		rules = [('%T', element.meta['title']), (" ", "-")]
-		slug = SLUG
-		for (expression, replacement) in rules:
-			slug = replace(slug, expression, replacement)
-		slug = lower(slug)
-	return slug
-	
-# find elements
-def findelementbyslug(source, slug):
-	for element in source:
-		if slug == getslug(element):
-			return element
-	return abort(404)
 		
 		
 						
 # create two instances of flatpages, one for the pages and one for the posts.	
-pages = FlexFlatPages(gen, 'pages')
-posts = FlexFlatPages(gen, 'posts')
+pages = FlatPages(gen, 'pages')
+posts = FlatPages(gen, 'posts')
 
 
 
@@ -160,7 +243,7 @@ def postindex(page):
 	
 @gen.route('/blog/<path:post>/')
 def post(post):
-	post = findelementbyslug(posts, post)
+	post = posts.get(post)
 	return render_theme_template(gen.config['THEME'], 'post.html', element=post)
 
 @gen.route('/blog/tags/')
@@ -181,11 +264,7 @@ def tag(tag, page):
 			tagged.append(post)
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page, objects=tagged))
 	
-# inject some standard vars and functions into templates
-@gen.context_processor
-def inject_getslug():
-	return dict(slug=getslug)
-	
+# inject some standard vars into templates
 @gen.context_processor
 def inject_settings():
 	return gen.config
@@ -195,7 +274,7 @@ def inject_menu():
 	menu = list()
 	menu.append(('Blog', '/blog/'))
 	for page in pages:
-		menu.append((page.meta['title'], url_for("page", page=page.path)))
+		menu.append((page.meta['title'], url_for("page", page=page.meta['slug'])))
 	return dict(menu=menu)
 
 
@@ -203,12 +282,12 @@ def inject_menu():
 @static.register_generator
 def page():
 	for page in pages:
-		yield {'page': page.path}
+		yield {'page': page.slug}
 
 @static.register_generator
 def post():
 	for post in posts:
-		yield {'post': genslug(post)}
+		yield {'post': post.slug}
 
 
 # cli-interface

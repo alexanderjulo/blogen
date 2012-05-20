@@ -13,13 +13,13 @@
 			<div class="row">
 				{% if DISQUS %}
 					<div class="span4">
-							<a class="btn btn-small disabled" href="{{ url_for('post', post=slug(element)) }}#disqus_thread"></a>
+							<a class="btn btn-small disabled" href="{{ url_for('post', post=element.slug) }}#disqus_thread"></a>
 					</div>
 					<div class="span1 offset3">
 				{% else %}
 					<div class="span1 offset7">
 				{% endif %}
-							<a class="btn btn-small" href="{{ url_for('post', post=slug(element)) }}" rel="bookmark" title="Permalink to {{ element.meta['title'] }}">Mehr</a>
+							<a class="btn btn-small" href="{{ url_for('post', post=element.slug) }}" rel="bookmark" title="Permalink to {{ element.meta['title'] }}">Mehr</a>
 					</div>
 			</div>
 	</div>
