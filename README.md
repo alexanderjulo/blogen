@@ -29,6 +29,7 @@ You should create a file `blogen.cnf` in the app's root. So far there are only t
 ``` python
 TITLE = "Your site's title." # this is recommended
 THEME = "<ID>" # this defaults to the default bootstrap theme.
+PER_PAGE = <NUM> # the default is 5
 ```
 
 ## Blogging
