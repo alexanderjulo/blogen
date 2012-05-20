@@ -29,7 +29,11 @@ You should create a file `blogen.cnf` in the app's root. So far there are only t
 ``` python
 TITLE = "Your site's title." # this is recommended
 THEME = "<ID>" # this defaults to the default bootstrap theme.
-PER_PAGE = <NUM> # the default is 5
+PER_PAGE = <NUM> # optional, the default is 5
+SLUG = '<SLUG>' # optional, customize the slug to your likings, so far only %T, which is title is possible
+DISQUS='<SHORTNAME>' # optional, disqus support, just enter your disqus shortname here
+ANALYTICS='<ID>' # optional, analytics support, just enter your analytics ID here
+SOCIAL=[('<Name>', '<URL>')] # optional, will create a social dropdown if given. put a number of tuples you like
 ```
 
 ## Blogging
