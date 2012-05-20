@@ -114,19 +114,21 @@ def paginate(source, page, objects=None):
 	return Pagination(source, page, gen.config['PER_PAGE'], objects)
 
 # generate dynamic and nice looking slugs for everything!
-def genslug(element):
-	rules = [('%T', element.meta['title']), (" ", "-")]
-	slug = SLUG
-	for (expression, replacement) in rules:
-		slug = replace(slug, expression, replacement)
-	slug = lower(slug)
+def getslug(element):
+	try:
+		slug = element.meta['slug']
+	except KeyError:
+		rules = [('%T', element.meta['title']), (" ", "-")]
+		slug = SLUG
+		for (expression, replacement) in rules:
+			slug = replace(slug, expression, replacement)
+		slug = lower(slug)
 	return slug
 	
 # find elements
 def findelementbyslug(source, slug):
 	for element in source:
-		element_slug = genslug(element)
-		if slug == element_slug:
+		if slug == getslug(element):
 			return element
 	return abort(404)
 		
@@ -179,10 +181,10 @@ def tag(tag, page):
 			tagged.append(post)
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page, objects=tagged))
 	
-# inject some standard vars into templates
+# inject some standard vars and functions into templates
 @gen.context_processor
-def inject_urlgen():
-	return dict(genslug=genslug)
+def inject_getslug():
+	return dict(slug=getslug)
 	
 @gen.context_processor
 def inject_settings():
