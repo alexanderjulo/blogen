@@ -6,7 +6,8 @@ from flaskext.flatpages import FlatPages, pygmented_markdown, Page
 from flaskext.script import Manager
 from flask_frozen import Freezer
 import os
-from math import ceil	
+from math import ceil
+from string import replace, lower
 
 
 
@@ -14,6 +15,7 @@ from math import ceil
 THEME='default'
 FLATPAGES_EXTENSION='.md'
 PER_PAGE=5
+SLUG='%T'
 
 
 
@@ -58,11 +60,12 @@ class Pagination(object):
 				
 				# sort posts by date
 				def getpagedate(page):
-					if isinstance(page, str):
-						print source.get(page).meta['date']
-						return source.get(page).meta['date']
+					date = ""
 					if isinstance(page, Page):
-						return page.meta['date']
+						date = page.__getitem__('date')
+					else:
+						date = source.get(page).__getitem__('date')
+					return date
 				
 				# if there is a list of posts given, sort the list
 				# otherwise get all posts from the source and sort them
@@ -71,7 +74,6 @@ class Pagination(object):
 				else:
 					elements = objects
 				self.objects = sorted(elements, key=getpagedate, reverse=True)
-				print self.objects
 				self.total_count = len(self.objects)
 				
 				# build content of current page
@@ -83,7 +85,6 @@ class Pagination(object):
 					else:
 						current_objects.append(source.get(element))
 				self.current = current_objects
-				print self.current
 					
 
 		@property
@@ -111,8 +112,25 @@ class Pagination(object):
 # a helper function to get the wanted page
 def paginate(source, page, objects=None):
 	return Pagination(source, page, gen.config['PER_PAGE'], objects)
-		
 
+# generate dynamic and nice looking slugs for everything!
+def genslug(element):
+	rules = [('%T', element.meta['title']), (" ", "-")]
+	slug = SLUG
+	for (expression, replacement) in rules:
+		slug = replace(slug, expression, replacement)
+	slug = lower(slug)
+	return slug
+	
+# find elements
+def findelementbyslug(source, slug):
+	for element in source:
+		element_slug = genslug(element)
+		if slug == element_slug:
+			return element
+	return abort(404)
+		
+		
 						
 # create two instances of flatpages, one for the pages and one for the posts.	
 pages = FlexFlatPages(gen, 'pages')
@@ -138,9 +156,10 @@ def page(page):
 def postindex(page):
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page))
 	
-@gen.route('/blog/<post>/')
+@gen.route('/blog/<path:post>/')
 def post(post):
-	return render_theme_template(gen.config['THEME'], 'post.html', element=posts.get_or_404(post))
+	post = findelementbyslug(posts, post)
+	return render_theme_template(gen.config['THEME'], 'post.html', element=post)
 
 @gen.route('/blog/tags/')
 def tagindex():
@@ -157,11 +176,14 @@ def tag(tag, page):
 	tagged = list()
 	for post in posts:
 		if tag in post.meta['tags']:
-			print str(post) + "has the tag" + tag
 			tagged.append(post)
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page, objects=tagged))
 	
 # inject some standard vars into templates
+@gen.context_processor
+def inject_urlgen():
+	return dict(genslug=genslug)
+	
 @gen.context_processor
 def inject_settings():
 	return gen.config
@@ -184,7 +206,7 @@ def page():
 @static.register_generator
 def post():
 	for post in posts:
-		yield {'post': post.path}
+		yield {'post': genslug(post)}
 
 
 # cli-interface
