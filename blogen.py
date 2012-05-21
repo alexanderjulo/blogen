@@ -4,6 +4,7 @@ from __future__ import with_statement
 
 import os
 import itertools
+import warnings
 
 import yaml
 import markdown
@@ -255,29 +256,37 @@ posts = FlatPages(gen, 'posts')
 
 
 # This is what will be frozen later on
-@gen.route('/')
-def index():
-	homepage = pages.get('index')
-	if homepage:
-		return render_theme_template(gen.config['THEME'], 'page.html', homepage)
-	else:
-		return redirect(url_for('postindex'))
-	
-@gen.route('/<page>/')
-def page(page):
-	return render_theme_template(gen.config['THEME'], 'page.html', page=pages.get_or_404(page))
-
-@gen.route('/blog/', defaults={'page': 1})
-@gen.route('/blog/page/<int:page>/')
+@gen.route('/', defaults={'page': 1})
+@gen.route('/page/<int:page>/')
 def postindex(page):
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page))
+
+@gen.route('/<path:url>/')
+def decider(url):
+	poss_page = pages.get(url)
+	poss_post = posts.get(url)
+	if poss_page and poss_post:
+		print "error: duplicate url %s, at page %s and post %s" % (url, poss_page.path, poss_post.path)
+		exit()
+	elif poss_page:
+		return page(url)
+	elif poss_post:
+		return post(url)
+	else:
+		return abort(404)
+		
+
+@gen.route('/<path:page>/')
+def page(page):
+	page = pages.get(page)
+	return render_theme_template(gen.config['THEME'], 'page.html', page=page)
 	
-@gen.route('/blog/<path:post>/')
+@gen.route('/<path:post>/')
 def post(post):
 	post = posts.get(post)
 	return render_theme_template(gen.config['THEME'], 'post.html', element=post)
 
-@gen.route('/blog/tags/')
+@gen.route('/tags/')
 def tagindex():
 	tags = []
 	for post in posts:
@@ -286,8 +295,8 @@ def tagindex():
 				tags.append(tag)
 	return render_theme_template(gen.config['THEME'], 'tags.html', tags=sorted(tags))
 
-@gen.route('/blog/tag/<tag>/', defaults={'page': 1})
-@gen.route('/blog/tag/<tag>/page/<page>/')
+@gen.route('/tag/<tag>/', defaults={'page': 1})
+@gen.route('/tag/<tag>/page/<page>/')
 def tag(tag, page):
 	tagged = list()
 	for post in posts:
@@ -295,7 +304,7 @@ def tag(tag, page):
 			tagged.append(post)
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page, objects=tagged))
 
-@gen.route('/blog/archive/')
+@gen.route('/archive/')
 def archive():
 	return render_theme_template(gen.config['THEME'], 'archive.html', pagination=paginate(posts, page=1, per_page=0))
 	
@@ -307,7 +316,7 @@ def inject_settings():
 @gen.context_processor
 def inject_menu():
 	menu = list()
-	menu.append(('Blog', '/blog/'))
+	menu.append(('Blog', '/'))
 	for page in pages:
 		menu.append((page.meta['title'], url_for("page", page=page.meta['slug'])))
 	try:
@@ -319,21 +328,21 @@ def inject_menu():
 
 # make sure all urls are found
 @static.register_generator
-def page():
+def page_url_generator():
 	for page in pages:
-		yield {'page': page.meta['slug']}
+		yield 'page', {'page': page.meta['slug']}
 
 @static.register_generator
-def post():
+def post_url_generator():
 	for post in posts:
-		yield {'post': post.meta['slug']}
+		yield 'post', {'post': post.meta['slug']}
 
 @static.register_generator
-def postindex():
+def postindex_url_generator():
 	pagination=paginate(posts, page=1)
 	i = 1
 	while i <= pagination.pages:
-		yield {'page': i}
+		yield 'postindex', {'page': i}
 		i = i+1
 
 
@@ -349,7 +358,9 @@ def setup():
 @cli.command
 def build():
 	print "building static website.."
-	static.freeze()
+	with warnings.catch_warnings():
+		warnings.simplefilter("ignore")
+		static.freeze()
 	print "finished!"
 
 if __name__ == '__main__':
