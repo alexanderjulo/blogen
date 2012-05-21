@@ -30,12 +30,26 @@ You should create a file `blogen.cnf` in the app's root. So far there are only t
 TITLE = "Your site's title." # this is recommended
 THEME = "<ID>" # this defaults to the default bootstrap theme.
 PER_PAGE = <NUM> # optional, the default is 5
-SLUG = '<SLUG>' # optional, customize the slug to your likings, so far only %T, which is title is possible
+SLUG = '<SLUG>' # optional, customize the slug to your likings, see the Slugs section for more info on available parameters
 DISQUS='<SHORTNAME>' # optional, disqus support, just enter your disqus shortname here
 ANALYTICS='<ID>' # optional, analytics support, just enter your analytics ID here
 SOCIAL=[('<Name>', '<URL>')] # optional, will create a social dropdown if given. put a number of tuples you like
 MENU=[('<Name>', '<URL>')]  # optional, add custom entries to the menu.
+DATETIME='<FORMATSTRING>' # optional, how dates should be looking like on your blog, check out http://docs.python.org/library/datetime.html#strftime-strptime-behavior for further information
 ```
+
+<h3 id="slugconfiguration">Slugs</h3>
+The following parameters are available for configuration, you can combine them, however you like:
+
+	%title% - title of your post/page
+	%path% - path of the file
+	%year% - year of the post
+	%month% - month of the post
+	%day% - day of the post
+	%hour% - hour of the post
+	%minute% - minute of the post 
+
+For all time dependent vars applies the fact, that of no date is given the file modification date is used.
 
 ## Blogging
 Create files that end with `.md` in `pages` if you want pages and `posts` in posts. The part before the `.md` will also be the url of you page/post for now. Configuration is done via YAML. Create at least a `title`-tag in the beginning of the file. There will be more supported tags in the future.

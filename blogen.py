@@ -11,6 +11,8 @@ import werkzeug
 
 from math import ceil
 from string import replace, lower
+from dateutil.parser import parse as timeparse
+from datetime import datetime
 
 from flask import Flask, render_template, url_for, redirect, abort
 from flaskext.themes import ThemeManager, setup_themes, render_theme_template
@@ -23,7 +25,8 @@ from flask_frozen import Freezer
 AUTHOR='anonymous'
 THEME='default'
 PER_PAGE=5
-SLUG='%T'
+SLUG='%title%'
+DATETIME='%d. %B %Y'
 
 
 
@@ -56,9 +59,12 @@ def pygments_style_defs(style='default'):
 		formater = pygments.formatters.HtmlFormatter(style=style)
 		return formater.get_style_defs('.codehilite')
 		
+	
+		
 class Page(object):
-	def __init__(self, path, meta_yaml, body):
+	def __init__(self, path, full_path, meta_yaml, body):
 		self.path = path
+		self.full_path = full_path
 		self.body = body
 		self._meta_yaml = meta_yaml
 		self.html_renderer = pygmented_markdown
@@ -80,10 +86,24 @@ class Page(object):
 			return {}
 		assert isinstance(meta, dict)
 		try:
+			self.date = timeparse(meta['date'])
+		except KeyError:
+			self.date = datetime.fromtimestamp(os.path.getmtime(self.full_path))
+		meta['date'] = self.date.strftime(gen.config['DATETIME'])
+		try:
 			meta['slug']
 		except KeyError:
-			rules = [('%T', meta['title']), ("%P", self.path), (" ", "-")]
-			slug = SLUG
+			rules = [
+				('%title%', meta['title']),
+				("%path%", self.path),
+				("%year%", str(self.date.year)),
+				("%month%", str(self.date.month)),
+				("%day%", str(self.date.day)),
+				("%hour%", str(self.date.hour)),
+				("%minute%", str(self.date.minute)),
+				(" ", "-")
+			]
+			slug = gen.config['SLUG']
 			for (expression, replacement) in rules:
 				slug = replace(slug, expression, replacement)
 			meta['slug'] = lower(slug)
@@ -146,14 +166,14 @@ class FlatPages(object):
 	def _load_file(self, path, filename):
 		with open(filename) as fd:
 			content = fd.read().decode('utf8')
-		page = self._parse(content, path)
+		page = self._parse(content, path, filename)
 		return page
 		
-	def _parse(self, string, path):
+	def _parse(self, string, path, filename):
 		lines = iter(string.split(u'\n'))
 		meta = u'\n'.join(itertools.takewhile(unicode.strip, lines))
 		content = u'\n'.join(lines)
-		return Page(path, meta, content)
+		return Page(path, filename, meta, content)
 
 
 
@@ -169,9 +189,9 @@ class Pagination(object):
 				def getpagedate(page):
 					date = ""
 					if isinstance(page, Page):
-						date = page.__getitem__('date')
+						date = page.date
 					else:
-						date = source.get(page).__getitem__('date')
+						date = source.get(page).date
 					return date
 				
 				# if there is a list of posts given, sort the list
