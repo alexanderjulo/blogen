@@ -290,6 +290,10 @@ def inject_menu():
 	menu.append(('Blog', '/blog/'))
 	for page in pages:
 		menu.append((page.meta['title'], url_for("page", page=page.meta['slug'])))
+	try:
+		menu = menu + gen.config['MENU']
+	except KeyError:
+		pass
 	return dict(menu=menu)
 
 

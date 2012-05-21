@@ -34,6 +34,7 @@ SLUG = '<SLUG>' # optional, customize the slug to your likings, so far only %T, 
 DISQUS='<SHORTNAME>' # optional, disqus support, just enter your disqus shortname here
 ANALYTICS='<ID>' # optional, analytics support, just enter your analytics ID here
 SOCIAL=[('<Name>', '<URL>')] # optional, will create a social dropdown if given. put a number of tuples you like
+MENU=[('<Name>', '<URL>')]  # optional, add custom entries to the menu.
 ```
 
 ## Blogging
