@@ -26,7 +26,8 @@ from flask_frozen import Freezer
 AUTHOR='anonymous'
 THEME='default'
 PER_PAGE=5
-SLUG='%title%'
+POSTSLUG='blog/%title%'
+PAGESLUG='%title%'
 DATETIME='%d. %B %Y'
 
 
@@ -63,12 +64,13 @@ def pygments_style_defs(style='default'):
 	
 		
 class Page(object):
-	def __init__(self, path, full_path, meta_yaml, body):
+	def __init__(self, path, full_path, meta_yaml, body, slug):
 		self.path = path
 		self.full_path = full_path
 		self.body = body
 		self._meta_yaml = meta_yaml
 		self.html_renderer = pygmented_markdown
+		self._slug = slug
 		
 	def __repr__(self):
 		return '<Page %r>' % self.path
@@ -104,7 +106,7 @@ class Page(object):
 				("%minute%", str(self.date.minute)),
 				(" ", "-")
 			]
-			slug = gen.config['SLUG']
+			slug = self._slug
 			for (expression, replacement) in rules:
 				slug = replace(slug, expression, replacement)
 			meta['slug'] = lower(slug)
@@ -120,9 +122,10 @@ class Page(object):
 		
 
 class FlatPages(object):
-	def __init__(self, app, root):
+	def __init__(self, app, root, slug):
 		self.app = app
 		self.root = unicode(root)
+		self._slug = slug
 
 		#: dict of filename: (page object, mtime when loaded) 
 		self._file_cache = {}
@@ -157,24 +160,24 @@ class FlatPages(object):
 				elif name.endswith('.md'):
 					name_without_extension = name[:-len('.md')]
 					path = u'/'.join(path_prefix + (name_without_extension,))
-					page = self._load_file(path, full_name)
+					page = self._load_file(path, full_name, self._slug)
 					pages[page.meta['slug']] = page
 		
 		pages = {}
 		_walk(self.root)
 		return pages
 	
-	def _load_file(self, path, filename):
+	def _load_file(self, path, filename, slug):
 		with open(filename) as fd:
 			content = fd.read().decode('utf8')
-		page = self._parse(content, path, filename)
+		page = self._parse(content, path, filename, slug)
 		return page
 		
-	def _parse(self, string, path, filename):
+	def _parse(self, string, path, filename, slug):
 		lines = iter(string.split(u'\n'))
 		meta = u'\n'.join(itertools.takewhile(unicode.strip, lines))
 		content = u'\n'.join(lines)
-		return Page(path, filename, meta, content)
+		return Page(path, filename, meta, content, slug)
 
 
 
@@ -250,8 +253,8 @@ def paginate(source, page, per_page=gen.config['PER_PAGE'], objects=None):
 		
 						
 # create two instances of flatpages, one for the pages and one for the posts.	
-pages = FlatPages(gen, 'pages')
-posts = FlatPages(gen, 'posts')
+pages = FlatPages(gen, 'pages', PAGESLUG)
+posts = FlatPages(gen, 'posts', POSTSLUG)
 
 
 

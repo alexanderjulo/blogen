@@ -30,7 +30,8 @@ You should create a file `blogen.cnf` in the app's root. So far there are only t
 TITLE = "Your site's title." # this is recommended
 THEME = "<ID>" # this defaults to the default bootstrap theme.
 PER_PAGE = <NUM> # optional, the default is 5
-SLUG = '<SLUG>' # optional, customize the slug to your likings, see the Slugs section for more info on available parameters
+PAGESLUG = '<SLUG>' # optional, customize the slug for pages to your likings, see the Slugs section for more info on available parameters
+POSTSLUG = '<SLUG>' # optional, customize the slug for posts to your likings, see the Slugs section for more info on available parameters
 DISQUS='<SHORTNAME>' # optional, disqus support, just enter your disqus shortname here
 ANALYTICS='<ID>' # optional, analytics support, just enter your analytics ID here
 SOCIAL=[('<Name>', '<URL>')] # optional, will create a social dropdown if given. put a number of tuples you like
