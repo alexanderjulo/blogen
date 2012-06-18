@@ -53,7 +53,20 @@ The following parameters are available for configuration, you can combine them, 
 For all time dependent vars applies the fact, that of no date is given the file modification date is used.
 
 ## Blogging
-Create files that end with `.md` in `pages` if you want pages and `posts` in posts. The part before the `.md` will also be the url of you page/post for now. Configuration is done via YAML. Create at least a `title`-tag in the beginning of the file. There will be more supported tags in the future.
+Create files that end with `.md` in `pages` if you want pages and `posts` in posts. The part before the `.md` will also be the url of you page/post for now. Configuration is done via YAML. Create at least a `title`-tag in the beginning of the file. For now title, date, tags and slug are supported. There will be more supported tags in the future.
+
+A minimal example would look like this:
+
+	title: Title of the post or page
+	
+	text
+	
+A more advanced example would like this:
+
+	title: Title of the post or page
+	date: 2012-06-18 18:30
+	tags: [we, are, tags, "many tags"]
+	slug: "i/am/a/custom-url"
 
 ## Building
 Just run:
