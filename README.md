@@ -24,7 +24,7 @@ python blogen.py setup
 That's it already.
 
 ## Configuration
-You should create a file `blogen.cnf` in the app's root. So far there are only two settings available, of which none is necessary but one recommended:
+You should create a file `blogen.cfg` in the app's root. So far there are only two settings available, of which none is necessary but one recommended:
 
 ``` python
 TITLE = "Your site's title." # this is recommended
