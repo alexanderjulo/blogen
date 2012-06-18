@@ -290,9 +290,12 @@ def post(post):
 def tagindex():
 	tags = []
 	for post in posts:
-		for tag in post.meta['tags']:
-			if tag not in tags:
-				tags.append(tag)
+		try:
+			for tag in post.meta['tags']:
+				if tag not in tags:
+					tags.append(tag)
+		except KeyError:
+			pass
 	return render_theme_template(gen.config['THEME'], 'tags.html', tags=sorted(tags))
 
 @gen.route('/tag/<tag>/', defaults={'page': 1})
@@ -300,8 +303,11 @@ def tagindex():
 def tag(tag, page):
 	tagged = list()
 	for post in posts:
-		if tag in post.meta['tags']:
-			tagged.append(post)
+			try:
+				if tag in post.meta['tags']:
+					tagged.append(post)
+			except KeyError:
+				pass
 	return render_theme_template(gen.config['THEME'], 'index.html', pagination=paginate(posts, page=page, objects=tagged))
 
 @gen.route('/archive/')
